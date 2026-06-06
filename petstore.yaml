@@ -6,7 +6,16 @@ paths:
       summary: List pets
 
     post:
-      summary: Create pet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  type: string
+
+                age:
+                  type: integer
 
 
   /pets/{id}:

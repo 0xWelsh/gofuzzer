@@ -5,6 +5,7 @@ import (
 
 	"gofuzzer/internal/config"
 	"gofuzzer/internal/parser"
+	"gofuzzer/internal/requester"
 )
 
 type Engine struct {
@@ -27,9 +28,26 @@ func (e *Engine) Run() error {
 	if err != nil {
 		return err
 	}
+	
+	fmt.Println("\nDiscovered requests.")
 
 	for _, ep := range endpoints {
+		req, err := requester.BuildRequest(
+			"https://api.example.com",
+			ep,
+		)
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s %s\n", req.Method, req.URL.String())
+
 		fmt.Printf("%s %s\n", ep.Method, ep.Path)
+
+		for field, typ := range ep.Body {
+			fmt.Printf(" %s (%s)\n", field, typ)
+		}
 	}
 
 	return nil

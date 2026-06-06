@@ -2,14 +2,34 @@ package parser
 
 import (
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 type OpenAPI struct {
-	Paths map[string]map[string]interface{} `yaml:"paths"`
+	Paths map[string]map[string]Operation `yaml:"paths"`
 }
 
+type Operation struct {
+	RequestBody RequestBody `yaml:"requestBody"`
+}
+
+type RequestBody struct {
+	Content map[string]MediaType `yaml:"content"`
+}
+
+type MediaType struct {
+	Schema Schema `yaml:"schema"`
+}
+
+type Schema struct {
+	Properties map[string]Property `yaml:"properties"`
+}
+
+type Property struct {
+	Type string `yaml:"type"`
+}
 
 func Parse(specPath string) ([]Endpoint, error) {
 	data, err := os.ReadFile(specPath)
@@ -26,10 +46,23 @@ func Parse(specPath string) ([]Endpoint, error) {
 	var endpoints []Endpoint
 
 	for path, methods := range spec.Paths {
-		for method := range methods {
+
+		for method, operation := range methods {
+
+			body := make(map[string]string)
+
+			if jsonMedia, ok := operation.RequestBody.Content["application/json"]; ok {
+
+				for field, property := range jsonMedia.Schema.Properties {
+
+					body[field] = property.Type
+				}
+			}
+
 			endpoints = append(endpoints, Endpoint{
-				Method: method,
+				Method: strings.ToUpper(method),
 				Path: path,
+				Body: body,
 			})
 		}
 	}
