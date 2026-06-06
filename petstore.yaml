@@ -1,0 +1,14 @@
+openapi: 3.0.0
+
+paths:
+  /pets:
+    get:
+      summary: List pets
+
+    post:
+      summary: Create pet
+
+
+  /pets/{id}:
+    get:
+      summary: Get pet
