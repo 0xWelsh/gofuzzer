@@ -1,8 +1,10 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"gofuzzer/internal/mutator"
 	"gofuzzer/internal/config"
 	"gofuzzer/internal/parser"
 	"gofuzzer/internal/requester"
@@ -47,6 +49,24 @@ func (e *Engine) Run() error {
 
 		for field, typ := range ep.Body {
 			fmt.Printf(" %s (%s)\n", field, typ)
+
+		}
+
+		if len(ep.Body) > 0 {
+
+			body := mutator.GenerateBody(ep.Body)
+
+			jsonBody, err := json.MarshalIndent(
+				body,
+				"",
+				" ",
+			)
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(jsonBody))
 		}
 	}
 
