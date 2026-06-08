@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gofuzzer/internal/mutator"
+	"gofuzzer/internal/analyzer"
 	"gofuzzer/internal/config"
+	"gofuzzer/internal/mutator"
 	"gofuzzer/internal/parser"
 	"gofuzzer/internal/requester"
 )
@@ -30,14 +31,29 @@ func (e *Engine) Run() error {
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Println("\nDiscovered requests.")
 
 	for _, ep := range endpoints {
 		req, err := requester.BuildRequest(
-			"https://api.example.com",
+			"http://localhost:8080",
 			ep,
 		)
+
+		resp, err := requester.Send(req)
+		if err != nil {
+			fmt.Printf("Request failed: %v\n", err)
+			continue
+		}
+
+		fmt.Printf(
+			"[%d] %s %s\n",
+			resp.StatusCode,
+			req.Method,
+			req.URL.String(),
+		)
+
+		resp.Body.Close()
 
 		if err != nil {
 			return err
@@ -54,19 +70,60 @@ func (e *Engine) Run() error {
 
 		if len(ep.Body) > 0 {
 
-			body := mutator.GenerateBody(ep.Body)
+			testCases := mutator.MutateBody(ep)
 
-			jsonBody, err := json.MarshalIndent(
-				body,
-				"",
-				" ",
-			)
+			for _, tc := range testCases {
 
-			if err != nil {
-				return err
+				req, err := requester.BuildJSONRequest(
+					"http://localhost:8080",
+					tc,
+				)
+
+				resp, err := requester.Send(req)
+				if err != nil {
+					fmt.Printf("Request failed: %v\n", err)
+					continue
+				}
+
+
+				fmt.Printf(
+					"[%d] %s %s\n",
+					resp.StatusCode,
+					req.Method,
+					req.URL.String(),
+				)
+
+				analyzer.Analyze(
+					resp.StatusCode,
+					req.Method,
+					req.URL.Path,
+				)
+
+				resp.Body.Close()
+
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf(
+					"%s %s\n",
+					req.Method,
+					req.URL.String(),
+				)
+
+				jsonBody, err := json.MarshalIndent(
+					tc.Body,
+					"",
+					" ",
+				)
+
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(jsonBody))
+				fmt.Println()
 			}
-
-			fmt.Println(string(jsonBody))
 		}
 	}
 

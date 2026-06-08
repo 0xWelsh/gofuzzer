@@ -61,8 +61,8 @@ func Parse(specPath string) ([]Endpoint, error) {
 
 			endpoints = append(endpoints, Endpoint{
 				Method: strings.ToUpper(method),
-				Path: path,
-				Body: body,
+				Path:   path,
+				Body:   body,
 			})
 		}
 	}
