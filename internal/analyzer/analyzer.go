@@ -1,6 +1,10 @@
 package analyzer
 
-import "fmt"
+import (
+	"fmt"
+
+	"gofuzzer/internal/ui"
+)
 
 func Analyze(
 	status int,
@@ -10,7 +14,9 @@ func Analyze(
 
 	if status >= 500 {
 		fmt.Printf(
-			"[!] Possible issue: %s %s -> %d\n",
+			"%s[!] Possible issue:%s %s %s -> %d\n",
+			ui.Red,
+			ui.Reset,
 			method,
 			path,
 			status,

@@ -9,6 +9,7 @@ import (
 	"gofuzzer/internal/mutator"
 	"gofuzzer/internal/parser"
 	"gofuzzer/internal/requester"
+	"gofuzzer/internal/ui"
 )
 
 type Engine struct {
@@ -46,9 +47,21 @@ func (e *Engine) Run() error {
 			continue
 		}
 
+		color := ui.Green
+
+		if resp.StatusCode >= 400 {
+			color = ui.Yellow
+		}
+
+		if resp.StatusCode >= 500 {
+			color = ui.Red
+		}
+
 		fmt.Printf(
-			"[%d] %s %s\n",
+			"%s[%d] %s %s %s\n",
+			color,
 			resp.StatusCode,
+			ui.Reset,
 			req.Method,
 			req.URL.String(),
 		)
@@ -85,10 +98,21 @@ func (e *Engine) Run() error {
 					continue
 				}
 
+				color := ui.Green
+
+				if resp.StatusCode >= 400 {
+					color = ui.Yellow
+				}
+
+				if resp.StatusCode >= 500 {
+					color = ui.Red
+				}
 
 				fmt.Printf(
-					"[%d] %s %s\n",
+					"%s[%d] %s %s %s\n",
+					color,
 					resp.StatusCode,
+					ui.Reset,
 					req.Method,
 					req.URL.String(),
 				)
