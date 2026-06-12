@@ -3,6 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"gofuzzer/internal/analyzer"
 	"gofuzzer/internal/config"
@@ -47,6 +48,13 @@ func (e *Engine) Run() error {
 			continue
 		}
 
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		length := len(bodyBytes)
+
 		color := ui.Green
 
 		if resp.StatusCode >= 400 {
@@ -58,10 +66,11 @@ func (e *Engine) Run() error {
 		}
 
 		fmt.Printf(
-			"%s[%d] %s %s %s\n",
+			"%s[%d]%s len=%d %s %s\n",
 			color,
 			resp.StatusCode,
 			ui.Reset,
+			length,
 			req.Method,
 			req.URL.String(),
 		)
@@ -71,8 +80,6 @@ func (e *Engine) Run() error {
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("%s %s\n", req.Method, req.URL.String())
 
 		fmt.Printf("%s %s\n", ep.Method, ep.Path)
 
@@ -98,6 +105,13 @@ func (e *Engine) Run() error {
 					continue
 				}
 
+				bodyBytes, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return err
+				}
+
+				length := len(bodyBytes)
+
 				color := ui.Green
 
 				if resp.StatusCode >= 400 {
@@ -109,10 +123,11 @@ func (e *Engine) Run() error {
 				}
 
 				fmt.Printf(
-					"%s[%d] %s %s %s\n",
+					"%s[%d]%s len=%d %s %s\n",
 					color,
 					resp.StatusCode,
 					ui.Reset,
+					length,
 					req.Method,
 					req.URL.String(),
 				)
@@ -124,10 +139,6 @@ func (e *Engine) Run() error {
 				)
 
 				resp.Body.Close()
-
-				if err != nil {
-					return err
-				}
 
 				fmt.Printf(
 					"%s %s\n",
