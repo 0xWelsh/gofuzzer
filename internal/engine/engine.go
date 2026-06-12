@@ -25,7 +25,10 @@ func New(cfg config.Config, specPath string) (*Engine, error) {
 	}, nil
 }
 
+
+
 func (e *Engine) Run() error {
+	var findings []analyzer.Finding
 	fmt.Printf("Loading spec: %s\n", e.specPath)
 	fmt.Printf("Workers: %d\n", e.cfg.Workers)
 
@@ -75,13 +78,17 @@ func (e *Engine) Run() error {
 			req.URL.String(),
 		)
 
-		resp.Body.Close()
+		finding := analyzer.Analyze(
+			resp.StatusCode,
+			req.Method,
+			req.URL.Path,
+		)
 
-		if err != nil {
-			return err
+		if finding != nil {
+			findings = append(findings, *finding)
 		}
 
-		fmt.Printf("%s %s\n", ep.Method, ep.Path)
+		resp.Body.Close()
 
 		for field, typ := range ep.Body {
 			fmt.Printf(" %s (%s)\n", field, typ)
@@ -132,19 +139,17 @@ func (e *Engine) Run() error {
 					req.URL.String(),
 				)
 
-				analyzer.Analyze(
+				finding := analyzer.Analyze(
 					resp.StatusCode,
 					req.Method,
 					req.URL.Path,
 				)
 
-				resp.Body.Close()
+				if finding != nil {
+					findings = append(findings, *finding)
+				}
 
-				fmt.Printf(
-					"%s %s\n",
-					req.Method,
-					req.URL.String(),
-				)
+				resp.Body.Close()
 
 				jsonBody, err := json.MarshalIndent(
 					tc.Body,
@@ -160,6 +165,18 @@ func (e *Engine) Run() error {
 				fmt.Println()
 			}
 		}
+	}
+
+	fmt.Println("\n=== Findings ===")
+
+	for _, f := range findings {
+		fmt.Printf(
+			"[%d] %s %s (%s)\n",
+			f.Status,
+			f.Method,
+			f.Path,
+			f.Reason,
+		)
 	}
 
 	return nil

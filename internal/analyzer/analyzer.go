@@ -10,7 +10,7 @@ func Analyze(
 	status int,
 	method string,
 	path string,
-) {
+) *Finding {
 
 	if status >= 500 {
 		fmt.Printf(
@@ -22,4 +22,6 @@ func Analyze(
 			status,
 		)
 	}
+
+	return nil
 }
